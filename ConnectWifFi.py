@@ -1,28 +1,27 @@
 #TO-DO
 #Сделать обработку ошибок при неправильном вводе пароля
 
-
-def connect():
+class WiFi():
+    def __init__(self, ssid, password):
+        self.ssid = ssid
+        self.password = password
+        
+    def connect(self):
     """Функция для подключения к вай-фай сети"""
-    
-    
-    
-    import network
- 
-    ssid = "WiFiDomRu-6285"
-    password =  "Nastya26042015"
- 
-    station = network.WLAN(network.STA_IF)
- 
-    if station.isconnected() == True:
-        print("Соединение уже установлено")
-        return
- 
-    station.active(True)
-    station.connect(ssid, password)
- 
-    while station.isconnected() == False:
-        pass
- 
-    print("Соединение установлено")
-    print(station.ifconfig())
+        station = network.WLAN(network.STA_IF)
+
+        if station.isconnected() == True:
+            print("Соединение уже установлено")
+            return
+
+        station.active(True)
+        station.connect(self.ssid, self.password)
+
+        while station.isconnected() == False:
+            pass
+
+        print("Соединение установлено")
+        print(station.ifconfig())
+
+
+
