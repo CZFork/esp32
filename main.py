@@ -1,24 +1,23 @@
 #Файл служит для автоматического выполнения скриптов на плате
 from machine import ADC, Pin, PWM
-import network
-from temperature import Temperature
-from ConnectWifFi import WiFi
-from pwm import Pwm
+import dht
+import time
 
+temp = ADC(Pin(33)) #Температура - аналоговый датчик
+temp_d = dht.DHT11(Pin(17)) #Температура - цифровой датчик
+pot = ADC(Pin(32)) #Потенциометр
+pwm12 = PWM(Pin(12)) #ШИМ
 
-#Константы
-ssid = "WiFiDomRu-6285"
-password =  "Nastya26042015"
-pin_temp = 0
-pin_led = 12
-
-#Подключение к вай-фай
-wifi = WiFi(ssid, password)
-wifi.connect()
-
-#получить температуру
-temp = Temperature(pin_temp) #0 - пин
-temp.get_temp()
-
-#Управление ШИМ (мигание светодиода)
-led = Pwm(pin_led, 1000, 512)
+while 1:
+    reg = pot.read()/4
+    pwm12.duty(reg)
+    temp_d.measure()
+    t1 = temp_d.temperature()
+    t2 = 0
+    for i in range(10):
+        t2 += temp/4095*5/4*100
+        time.sleep_ms(15)
+    
+    t2 = t2/10
+    print(t1,t2)
+    time.sleep_ms(10)
