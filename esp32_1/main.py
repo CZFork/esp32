@@ -8,8 +8,10 @@ mqtt = MQTT(client_id="1")
 buz.beep(50, 1) #после подключения протокола mqtt один звуковой сигнал
 
 
-while 1:
+while True:
     n_t = temp.get_temp() #проверка температуры
     mqtt.publish('temp', str(n_t)) #публикация температуры
     if n_t < 17:
         buz.on()
+        
+        

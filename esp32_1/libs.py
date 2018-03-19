@@ -16,7 +16,7 @@ class Temperature():
         
     def get_addr(self):
         """Функция получения адреса датчика"""
-        self.dat = DS18B20(OneWire(Pin(self.port)))
+        self.dat = DS18B20(OneWire(Pin(self.port, Pin.IN)))
         try_id = 1
         while len(self.addr)<1:
             print("Попытка номер {0} найти адрес датчика".format(try_id))
@@ -60,7 +60,7 @@ class ActiveBuzzer():
     #Класс для работы с звукоизвлекателем
     def __init__(self, port):
         self.port = port
-        self.pin = Pin(port)
+        self.pin = Pin(port, Pin.OUT)
         
     def on(self):
         """Включить пищалку"""
@@ -86,4 +86,23 @@ class MQTT():
         
     def publish(self, topic, message):
         client.publish(str(topic), str(message))
+        
+        
+class Button():
+    #Класс для управление кнопкой
+    
+    def __init__(self, port):
+        self.port = port
+        self.pin = Pin(port, Pin.IN, Pin.PULL_UP)
+        self.mode = 0
+        
+    def change_mode(self):
+        if self.mode == 0:
+            self.mode = 1
+        else:
+            self.mode = 0
+            
+    def but_pressed(self):
+        mode = self.pin.value()
+        self.change_mode()
         
