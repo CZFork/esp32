@@ -4,8 +4,54 @@ from onewire import OneWire #импортируем класс OneWire
 from ds18b20 import DS18B20 #импортируем класс датчика ds18b20
 from network import WLAN #импортируем класс подключения к сети вай-фай
 from mqtt import MQTTClient #для реализации Mqtt клиента
+import traceback #трассировка ошибки - необходима для работы модуля логгирования
+import urequests #для http запросов - необходима для отправки данных в телеграмм
 
-class Temperature():
+class Logfile():
+    filename = "log.txt"
+    
+    def __init__(self):
+        self.file = open(Logfile.filename, "a")
+        
+    def log_mes(self, text):
+        mes = str(time.strftime("%Y-%m-%d %H:%M:%S"))+" "+ str("[INFO]") +" "+ str(text) + "\n"
+        self.file.write(mes)
+        self.post_message(mes)
+    
+    def log_err(self, err):
+        trace = traceback.format_exc()
+        mes = str(time.strftime("%Y-%m-%d %H:%M:%S"))+" "+ str("[ERROR]") +" "+ str(err) + "\n"
+        self.file.write(mes)
+        self.post_message(mes)
+        
+        trace_split = trace.split('\n')
+        for trace in trace_split:
+            if trace!='':
+                mes = str(time.strftime("%Y-%m-%d %H:%M:%S"))+" "+ str("[TRACEBACK]") +" "+ str(trace) + "\n"
+                self.file.write(mes)
+                self.post_message(mes)
+    
+    def end(self):
+        self.file.close()
+        
+    def post_message(self, message):
+        try:
+            URL = 'https://api.telegram.org/bot' 
+            TOKEN = '399910911:AAEh2Wv3YWKe1XSOW0hXeBmaJfbp1O4VBlk'
+            data = {'offset': 1, 'limit': 0, 'timeout': 0}
+            message_data = {
+                    'chat_id': 24504089, 
+                    'text': message,
+                    'parse_mode': 'HTML'
+                }
+
+            request = urequests.post(URL+TOKEN +'/sendMessage', data=message_data) 
+            
+        except Exception as err:
+            self.log_err(err)
+
+
+class Temperature(Logfile):
     #Класс для датчика температуры DS18B20
     
     def __init__(self, port):
@@ -16,23 +62,33 @@ class Temperature():
         
     def get_addr(self):
         """Функция получения адреса датчика"""
-        self.dat = DS18B20(OneWire(Pin(self.port, Pin.IN)))
-        try_id = 1
-        while len(self.addr)<1:
-            print("Попытка номер {0} найти адрес датчика".format(try_id))
-            self.addr = self.dat.scan()[0]
-            time.sleep_ms(750)
-            try_id += 1
-        print("Соединения с датчиком установлено")
+        try:
+            self.dat = DS18B20(OneWire(Pin(self.port, Pin.IN)))
+            try_id = 1
+            while len(self.addr)<1:
+                self.log_mes("Попытка номер {0} найти адрес датчика".format(try_id))
+                self.addr = self.dat.scan()[0]
+                time.sleep_ms(750)
+                try_id += 1
+            self.log_mes("Соединения с датчиком установлено")
+        
+        except Exception as err:
+            self.log_err(err)
+            
 
     def get_temp(self):
-        self.dat.convert_temp()
-        time.sleep_ms(750)
-        self.temp = self.read_temp(rom)
-        print("Текущая температура {0} градусов Цельсия".format(self.temp))
-        return self.temp
+        try:   
+            self.dat.convert_temp()
+            time.sleep_ms(750)
+            self.temp = self.dat.read_temp(self.addr)
+            self.log_mes("Текущая температура {0} градусов Цельсия".format(self.temp))
+            return self.temp
+       
+        except Exception as err:
+            self.log_err(err)
     
-class WiFi():
+    
+class WiFi(Logfile):
     #Класс для подлючения к сети вай-фай
     def __init__(self, ssid, password):
         self.ssid = ssid
@@ -40,23 +96,28 @@ class WiFi():
         self.connect()
         
     def connect(self):
-    """Функция для подключения к вай-фай сети"""
-        station = network.WLAN(network.STA_IF)
+        try:
+            """Функция для подключения к вай-фай сети"""
+            station = network.WLAN(network.STA_IF)
 
-        if station.isconnected() == True:
-            print("Соединение уже установлено")
-            return
+            if station.isconnected() == True:
+                self.log_mes("Соединение уже установлено")
+                return
 
-        station.active(True)
-        station.connect(self.ssid, self.password)
+            station.active(True)
+            station.connect(self.ssid, self.password)
 
-        while station.isconnected() == False:
-            pass
+            while station.isconnected() == False:
+                pass
 
-        print("Соединение установлено")
-        print(station.ifconfig())
+            self.log_mes("Соединение установлено")
+            self.log_mes(station.ifconfig())
         
-class ActiveBuzzer():
+        except Exception as err:
+            self.log_err(err)
+        
+        
+class ActiveBuzzer(Logfile):
     #Класс для работы с звукоизвлекателем
     def __init__(self, port):
         self.port = port
@@ -78,17 +139,25 @@ class ActiveBuzzer():
             time.sleep_ms(time_sleep_ms)
             
 
-class MQTT():
+class MQTT(Logfile):
     #класс для управления данными отправляемыми по протоколу mqtt
     def __init__(self, client_id, server="io.adafruit.com", user="PashaSyr", password="e9666ef66a0149679734021420f5680b", port=1883):
-        client = MQTTClient(client_id=client_id, server=server, user=user, password=password, port=port) 
-        client.connect()
+        try:
+            client = MQTTClient(client_id=client_id, server=server, user=user, password=password, port=port) 
+            client.connect()
+            self.client = client
+        
+        except Exception as err:
+            self.log_err(err)
         
     def publish(self, topic, message):
-        client.publish(str(topic), str(message))
+        try:
+            client.publish(str(topic), str(message))
+        except Exception as err:
+            self.log_err(err)
         
         
-class Button():
+class Button(Logfile):
     #Класс для управление кнопкой
     
     def __init__(self, port):
