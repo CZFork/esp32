@@ -80,7 +80,7 @@ class ActiveBuzzer():
 
 class MQTT():
     #класс для управления данными отправляемыми по протоколу mqtt
-    def __init__(self, client_id, server="io.adafruit.com", user="PashaSyr", password="Pavel12291993", port=1883):
+    def __init__(self, client_id, server="io.adafruit.com", user="PashaSyr", password="e9666ef66a0149679734021420f5680b", port=1883):
         client = MQTTClient(client_id=client_id, server=server, user=user, password=password, port=port) 
         client.connect()
         

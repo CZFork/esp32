@@ -1,0 +1,5 @@
+2018-03-20 15:44:28 [ERROR] division by zero
+2018-03-20 15:44:28 [TRACEBACK] Traceback (most recent call last):
+2018-03-20 15:44:29 [TRACEBACK]   File "test.py", line 10, in <module>
+2018-03-20 15:44:30 [TRACEBACK]     summa = z/y
+2018-03-20 15:44:30 [TRACEBACK] ZeroDivisionError: division by zero

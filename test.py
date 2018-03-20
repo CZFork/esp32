@@ -1,8 +1,17 @@
-addr = []
-t = 0
-while len(addr)<1:
-    if t>5:
-        addr.append(1)
-    else:
-        print(t)
-    t+=1
+from logg import Logfile
+import time
+
+l=Logfile()
+try:
+
+    z = 0
+    for y in range(0, 10):
+
+        summa = z/y
+        l.log(summa)
+
+        time.sleep(1)
+except Exception as err:
+    l.log_err(err)
+finally:
+    l.end()
