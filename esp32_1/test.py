@@ -41,5 +41,6 @@ def change_buz(buz, but):
         else:       
             buz.off()
 
+_thread.start_new_thread(change_buz, (buz, but)) 
 _thread.start_new_thread(get_and_push_temp, ())  
-_thread.start_new_thread(get_and_push_temp, (buz, but))    
+   
