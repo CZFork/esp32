@@ -1,5 +1,5 @@
 import time #библиотека для прерываний 
-from machine import Pin #импортируем класс Пин
+from machine import Pin, PWM #импортируем класс Пин и ШИМ
 from onewire import OneWire #импортируем класс OneWire
 from ds18b20 import DS18B20 #импортируем класс датчика ds18b20
 from network import WLAN #импортируем класс подключения к сети вай-фай
@@ -138,6 +138,13 @@ class ActiveBuzzer(Logfile):
             self.off()
             time.sleep_ms(time_sleep_ms)
             
+    def sub_cb(self, topic, msg):
+        #Для MQTT подписка
+        if msg == b"Включить":
+            self.on()
+        elif msg == b"Выключить":
+            self.off()
+            
 
 class MQTT(Logfile):
     #класс для управления данными отправляемыми по протоколу mqtt
@@ -150,9 +157,21 @@ class MQTT(Logfile):
         except Exception as err:
             self.log_err(err)
         
-    def publish(self, topic, message):
+    def pub(self, topic, message):
         try:
-            client.publish(str(topic), str(message))
+            self.client.publish(str(topic), str(message))
+        except Exception as err:
+            self.log_err(err)
+    
+    def set_call(self, callback):
+        try:
+            self.client.set_callback(callback)
+        except Exception as err:
+            self.log_err(err)
+    
+    def sub(self, topic):
+        try:
+            self.client.subscribe(str(topic))
         except Exception as err:
             self.log_err(err)
         
@@ -165,13 +184,32 @@ class Button(Logfile):
         self.pin = Pin(port, Pin.IN, Pin.PULL_UP)
         self.mode = 0
         
-    def change_mode(self):
-        if self.mode == 0:
-            self.mode = 1
-        else:
-            self.mode = 0
             
     def but_pressed(self):
-        mode = self.pin.value()
-        self.change_mode()
+        self.mode = self.pin.value()
+        return self.mode
+        
+
+class RGBLed:
+    #Класс для управления светодиодом
+    def __init__(self, pin_r, pin_g, pin_b):
+        self.pin_r = PWM(Pin(pin_r))
+        self.pin_g = PWM(Pin(pin_g))
+        self.pin_b = PWM(Pin(pin_b))
+        self.set(0, 0, 0)
+
+    def set(self, r, g, b):
+        self.r = int(r)
+        self.g = int(g)
+        self.b = int(b)
+        self.duty()
+
+    def duty(self):
+        self.pin_r.duty(self.duty_translate(self.r))
+        self.pin_g.duty(self.duty_translate(self.g))
+        self.pin_b.duty(self.duty_translate(self.b))
+
+    def duty_translate(self, n):
+        """translate values from 0-255 to 0-1023"""
+        return int((float(n) / 255) * 1023)
         
