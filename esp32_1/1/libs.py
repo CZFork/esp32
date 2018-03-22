@@ -100,10 +100,16 @@ class MQTT():
             self.client = MQTTClient(client_id, server=server, user=user, password=password, port=port)
         
     def pub(self, topic, message):
-            self.client.connect()
-            self.client.publish(str(topic), str(message))
-            self.client.disconnect()
-
+        self.client.connect()
+        self.client.publish(str(topic), str(message))
+        self.client.disconnect()
+    def sub(self, topic):
+        self.client.connect()
+        self.client.subscribe(topic)
+        result = self.client.check_msg()
+        time.sleep(1)
+        self.client.disconnect()
+        return result
         
         
 class Button():
@@ -126,9 +132,9 @@ class RGBLed():
         self.pin_r = PWM(Pin(pin_r))
         self.pin_g = PWM(Pin(pin_g))
         self.pin_b = PWM(Pin(pin_b))
-        self.set(0, 0, 0)
+        self.set_rgb(0, 0, 0)
 
-    def set(self, r, g, b):
+    def set_rgb(self, r, g, b):
         self.r = int(r)
         self.g = int(g)
         self.b = int(b)
