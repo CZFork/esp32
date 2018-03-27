@@ -14,7 +14,14 @@ def get_temp_street():
     aio.send('pleassure', pleassure)
     aio.send('relative_humidity', relative_humidity)
     aio.send('temp_on_street', temp)
-    
-while True:
-    get_temp_street()
-    time.sleep(60)
+
+def main():
+    while True:
+        try:
+            get_temp_street()
+            time.sleep(60)
+        except:
+            time.sleep(300)
+
+if __name__=="__main__":
+    main()
